@@ -1,29 +1,30 @@
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
-    <!--    <div-->
-    <!--      class="fixed w-100 h-100 opacity-80 bg-purple-800 inset-0 z-50 flex items-center justify-center"-->
-    <!--    >-->
-    <!--      <svg-->
-    <!--        class="animate-spin -ml-1 mr-3 h-12 w-12 text-white"-->
-    <!--        xmlns="http://www.w3.org/2000/svg"-->
-    <!--        fill="none"-->
-    <!--        viewBox="0 0 24 24"-->
-    <!--      >-->
-    <!--        <circle-->
-    <!--          class="opacity-25"-->
-    <!--          cx="12"-->
-    <!--          cy="12"-->
-    <!--          r="10"-->
-    <!--          stroke="currentColor"-->
-    <!--          stroke-width="4"-->
-    <!--        ></circle>-->
-    <!--        <path-->
-    <!--          class="opacity-75"-->
-    <!--          fill="currentColor"-->
-    <!--          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"-->
-    <!--        ></path>-->
-    <!--      </svg>-->
-    <!--    </div>-->
+    <div
+      v-if="!loading"
+      class="fixed w-100 h-100 opacity-80 bg-purple-800 inset-0 z-50 flex items-center justify-center"
+    >
+      <svg
+        class="animate-spin -ml-1 mr-3 h-12 w-12 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    </div>
     <div class="container">
       <section>
         <div class="flex">
@@ -34,7 +35,7 @@
             <div class="mt-1 relative rounded-md shadow-md">
               <input
                 v-model="ticker"
-                @keydown.enter="add"
+                @keydown.enter="!checkedCorrectTicker ? add() : ''"
                 type="text"
                 name="wallet"
                 id="wallet"
@@ -43,34 +44,29 @@
               />
             </div>
             <div
+              v-if="ticker"
               class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
             >
               <span
+                v-for="(c, index) of validationCoin"
+                :key="index"
+                @click="ticker = c"
                 class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
               >
-                BTC
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                DOGE
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                BCH
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                CHD
+                {{ c }}
               </span>
             </div>
-            <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
+            <div v-if="checkedExistTicker" class="text-sm text-red-600">
+              Такой тикер уже добавлен
+            </div>
           </div>
         </div>
         <button
-          @click="add"
+          @click="add()"
+          :disabled="checkedCorrectTicker"
+          :class="{
+            'disabled:opacity-50': 'disabled:opacity-50'
+          }"
           type="button"
           class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
         >
@@ -91,14 +87,36 @@
         </button>
       </section>
       <template v-if="tickers.length">
+        <div>
+          <span>Страница - {{ page }}</span>
+          <button
+            v-if="page > 1"
+            @click="page = page - 1"
+            class="ml-4 mx my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          >
+            Назад</button
+          ><button
+            v-if="hasNextPage"
+            @click="page = page + 1"
+            class="ml-4 my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          >
+            Вперед
+          </button>
+        </div>
+        <div>
+          <label>
+            Фильтрация:
+            <input v-model="filter" type="text" />
+          </label>
+        </div>
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="t of tickers"
+            v-for="t of paginadedTickers"
             :key="t.name"
             @click="select(t)"
             :class="{
-              'border-4': sel === t
+              'border-4': selectedTicker === t
             }"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
@@ -134,13 +152,13 @@
         </dl>
         <hr class="w-full border-t border-gray-600 my-4" />
       </template>
-      <section v-if="sel" class="relative">
+      <section v-if="selectedTicker" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          {{ sel.name }}
+          {{ selectedTicker.name }}
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div
-            v-for="(bar, index) in normalizeGraph()"
+            v-for="(bar, index) in normalizeGraph"
             :key="index"
             :style="{
               height: `${bar}%`
@@ -149,7 +167,7 @@
           ></div>
         </div>
         <button
-          @click="sel = null"
+          @click="selectedTicker = null"
           type="button"
           class="absolute top-0 right-0"
         >
@@ -186,43 +204,175 @@ export default {
   data() {
     return {
       ticker: '',
+      filter: '',
+
       tickers: [],
-      sel: null,
-      graph: []
+      graph: [],
+      selectedTicker: null,
+
+      coinList: {},
+      loading: false,
+
+      page: 1
     };
   },
-  methods: {
-    add() {
-      const currentTicker = {
-        name: this.ticker,
-        price: '-'
+  created() {
+    const windowData = Object.fromEntries(
+      new URL(window.location).searchParams.entries()
+    );
+    if (windowData.filter) {
+      this.filter = windowData.filter;
+    }
+    if (windowData.page) {
+      this.page = windowData.page;
+    }
+
+    const tickersData = localStorage.getItem('cryptonomicon-list');
+    if (tickersData) {
+      this.tickers = JSON.parse(tickersData);
+      this.tickers.forEach((ticker) => {
+        this.subscribeToUpdates(ticker.name);
+      });
+    }
+    this.getCoinList();
+  },
+  computed: {
+    startIndex() {
+      return (this.page - 1) * 6;
+    },
+    endIndex() {
+      return this.page * 6;
+    },
+    filteredTickers() {
+      return this.tickers.filter((ticker) =>
+        ticker.name.includes(this.filter.toUpperCase())
+      );
+    },
+    paginadedTickers() {
+      return this.filteredTickers.slice(this.startIndex, this.endIndex);
+    },
+    hasNextPage() {
+      return this.filteredTickers.length > this.endIndex;
+    },
+    checkedCorrectTicker() {
+      let logicValue = true;
+      Object.keys(this.coinList).some((el) => {
+        if (el === this.ticker.toUpperCase() && !this.checkedExistTicker) {
+          logicValue = false;
+        } else if (!this.ticker.toUpperCase()) {
+          logicValue = true;
+        }
+      });
+      return logicValue;
+    },
+    checkedExistTicker() {
+      return this.tickers.some((el) => {
+        return el.name === this.ticker.toUpperCase();
+      });
+    },
+    validationCoin() {
+      let arr = [];
+      Object.values(this.coinList).forEach((el) => {
+        if (
+          el.Symbol.substr(0, this.ticker.length) === this.ticker.toUpperCase()
+        ) {
+          if (arr.length < 6) {
+            arr.push(el.Symbol);
+          }
+        }
+      });
+      return arr;
+    },
+    maxValue() {
+      return Math.max(...this.graph);
+    },
+    minValue() {
+      return Math.min(...this.graph);
+    },
+    normalizeGraph() {
+      if (this.maxValue === this.minValue) {
+        return this.graph.map(() => 50);
+      }
+      return this.graph.map(
+        (price) =>
+          5 + ((price - this.minValue) * 95) / (this.maxValue - this.minValue)
+      );
+    },
+    pageStateOptions() {
+      return {
+        filter: this.filter,
+        page: this.page
       };
-      this.tickers.push(currentTicker);
+    }
+  },
+  methods: {
+    subscribeToUpdates(tickerName) {
       setInterval(async () => {
         const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=38a228cc75485f4842616b894785e9350b9aa1fbf5eb55435f5e2e41bb750428`
+          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=38a228cc75485f4842616b894785e9350b9aa1fbf5eb55435f5e2e41bb750428`
         );
         const data = await f.json();
-        this.tickers.find((t) => t.name === currentTicker.name).price =
-          data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        if (this.sel?.name === currentTicker.name) {
-          this.graph.push(data.USD);
+        if (
+          this.tickers.find((t) => t.name === tickerName)?.price === undefined
+        ) {
+          clearInterval();
+        } else {
+          this.tickers.find((t) => t.name === tickerName).price =
+            data?.USD > 1 ? data?.USD.toFixed(2) : data.USD?.toPrecision(2);
+          if (this.selectedTicker?.name === tickerName) {
+            this.graph.push(data.USD);
+          }
         }
-      }, 3000);
+      }, 10000);
       this.ticker = '';
     },
+    add() {
+      const currentTicker = {
+        name: this.ticker.toUpperCase(),
+        price: '-'
+      };
+      this.tickers = [...this.tickers, currentTicker];
+      this.filter = '';
+      this.subscribeToUpdates(currentTicker.name);
+    },
     select(ticker) {
-      this.sel = ticker;
-      this.graph = [];
+      this.selectedTicker = ticker;
     },
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter((t) => t !== tickerToRemove);
+      if (this.selectedTicker === tickerToRemove) {
+        this.selectedTicker = null;
+      }
     },
-    normalizeGraph() {
-      const maxValue = Math.max(...this.graph);
-      const minValue = Math.min(...this.graph);
-      return this.graph.map(
-        (price) => 5 + ((price - minValue) * 95) / (maxValue - minValue)
+    async getCoinList() {
+      const coins = await fetch(
+        'https://min-api.cryptocompare.com/data/all/coinlist?summary=true'
+      );
+      const data = await coins.json();
+      this.coinList = data.Data;
+      this.loading = true;
+    }
+  },
+  watch: {
+    selectedTicker() {
+      this.graph = [];
+    },
+    tickers() {
+      localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
+    },
+    paginatedTickers() {
+      if (this.paginadedTickers.length === 0 && this.page > 1) {
+        this.page -= 1;
+      }
+    },
+    filter() {
+      this.page = 1;
+    },
+    pageStateOptions(value) {
+      window.history.pushState(
+        null,
+        document.title,
+        `${window.location.pathname}?filter=${value.filter}&page=${value.page}`
       );
     }
   }
