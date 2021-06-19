@@ -140,8 +140,6 @@ export default {
 
       coinList: {},
       loading: false,
-      testData: null,
-      temp: [],
       page: 1
     };
   },
@@ -223,8 +221,6 @@ export default {
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
     updateTicker(tickerName, price) {
-      // const { ...tickers } = this.tickers;
-      // sharedWorker.postMessage(JSON.stringify(tickers));
       this.tickers
         .filter((ticker) => tickerName === ticker.name)
         .forEach((t) => {
@@ -275,8 +271,6 @@ export default {
     },
     tickers() {
       localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
-      // const item = localStorage.getItem('cryptonomicon-list');
-      // this.tickers = JSON.parse(items);
     },
     paginatedTickers() {
       if (this.paginadedTickers.length === 0 && this.page > 1) {
