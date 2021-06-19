@@ -25,19 +25,18 @@
         ></path>
       </svg>
     </div>
+    <button
+      type="button"
+      class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+    >
+      Открыть окно
+    </button>
     <div class="container">
       <add-ticker
         @add-ticker="add"
         :tickers="tickers"
         :coin-list="coinList"
       ></add-ticker>
-      <button
-        @click="isModalOpen = true"
-        type="button"
-        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-      >
-        Открыть окно
-      </button>
       <template v-if="tickers.length">
         <div>
           <span>Страница - {{ page }}</span>
@@ -119,6 +118,8 @@
 import { subscribeToTicker, unsubscribeFromTicker } from './api';
 import AddTicker from './components/AddTicker';
 import TickerGraphic from './components/TickerGraphic';
+import sharedWorker from '@/shared-worker';
+
 export default {
   name: 'App',
   components: {
@@ -139,7 +140,8 @@ export default {
 
       coinList: {},
       loading: false,
-
+      testData: null,
+      temp: [],
       page: 1
     };
   },
@@ -153,15 +155,14 @@ export default {
     if (windowData.page) {
       this.page = windowData.page;
     }
-
     const tickersData = localStorage.getItem('cryptonomicon-list');
     if (tickersData) {
       this.tickers = JSON.parse(tickersData);
-      this.tickers.forEach((ticker) =>
+      this.tickers.forEach((ticker) => {
         subscribeToTicker(ticker.name, (newPrice) =>
           this.updateTicker(ticker.name, newPrice)
-        )
-      );
+        );
+      });
     }
     this.getCoinList();
   },
@@ -190,7 +191,19 @@ export default {
       };
     }
   },
+  mounted() {
+    sharedWorker.worker.port.onmessage = (e) => {
+      this.tickers = JSON.parse(e.data);
+    };
+  },
+  beforeUnmount() {
+    removeEventListener('message', sharedWorker.worker.port);
+  },
   methods: {
+    sendTestMessage() {
+      localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
+      sharedWorker.postMessage(JSON.stringify(this.tickers));
+    },
     openModal() {
       this.isModalOpen = true;
     },
@@ -210,6 +223,8 @@ export default {
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
     updateTicker(tickerName, price) {
+      // const { ...tickers } = this.tickers;
+      // sharedWorker.postMessage(JSON.stringify(tickers));
       this.tickers
         .filter((ticker) => tickerName === ticker.name)
         .forEach((t) => {
@@ -221,6 +236,7 @@ export default {
           }
           t.price = price;
         });
+      this.sendTestMessage();
     },
     add(ticker) {
       const currentTicker = {
@@ -259,6 +275,8 @@ export default {
     },
     tickers() {
       localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
+      // const item = localStorage.getItem('cryptonomicon-list');
+      // this.tickers = JSON.parse(items);
     },
     paginatedTickers() {
       if (this.paginadedTickers.length === 0 && this.page > 1) {
