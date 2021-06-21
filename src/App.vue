@@ -25,12 +25,6 @@
         ></path>
       </svg>
     </div>
-    <button
-      type="button"
-      class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-    >
-      Открыть окно
-    </button>
     <div class="container">
       <add-ticker
         @add-ticker="add"
@@ -136,7 +130,6 @@ export default {
       maxGraphElements: 1,
 
       selectedTicker: null,
-      isModalOpen: false,
 
       coinList: {},
       loading: false,
@@ -198,15 +191,11 @@ export default {
     removeEventListener('message', sharedWorker.worker.port);
   },
   methods: {
-    sendTestMessage() {
+    setTickersToLocalStorage() {
       localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
+    },
+    sendTickersToSharedWorker() {
       sharedWorker.postMessage(JSON.stringify(this.tickers));
-    },
-    openModal() {
-      this.isModalOpen = true;
-    },
-    modalConfirm() {
-      this.isModalOpen = false;
     },
     clearSelectedTicker() {
       this.selectedTicker = null;
@@ -232,7 +221,8 @@ export default {
           }
           t.price = price;
         });
-      this.sendTestMessage();
+      this.setTickersToLocalStorage();
+      this.sendTickersToSharedWorker();
     },
     add(ticker) {
       const currentTicker = {
