@@ -191,9 +191,6 @@ export default {
     removeEventListener('message', sharedWorker.worker.port);
   },
   methods: {
-    setTickersToLocalStorage() {
-      localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers));
-    },
     sendTickersToSharedWorker() {
       sharedWorker.postMessage(JSON.stringify(this.tickers));
     },
@@ -221,7 +218,6 @@ export default {
           }
           t.price = price;
         });
-      this.setTickersToLocalStorage();
       this.sendTickersToSharedWorker();
     },
     add(ticker) {
