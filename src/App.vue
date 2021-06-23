@@ -101,8 +101,8 @@
         v-if="selectedTicker"
         :selected-ticker="selectedTicker"
         :graph="graph"
-        v-on:calc-max-graph-elements="calculateMaxGraphElements"
-        v-on:clear-sel-ticker="clearSelectedTicker"
+        v-on:calculate-max-graph-elements="calculateMaxGraphElements"
+        v-on:clear-selected-ticker="clearSelectedTicker"
       ></ticker-graphic>
     </div>
   </div>
@@ -123,17 +123,14 @@ export default {
   data() {
     return {
       filter: '',
-
       tickers: [],
-
       graph: [],
       maxGraphElements: 1,
-
       selectedTicker: null,
-
       coinList: {},
       loading: false,
-      page: 1
+      page: 1,
+      temp: []
     };
   },
   created() {
@@ -192,6 +189,7 @@ export default {
   },
   methods: {
     sendTickersToSharedWorker() {
+      // here is a bug, when you update tickers, the graph breaks
       sharedWorker.postMessage(JSON.stringify(this.tickers));
     },
     clearSelectedTicker() {

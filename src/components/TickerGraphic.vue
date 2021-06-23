@@ -17,7 +17,7 @@
       ></div>
     </div>
     <button
-      @click="clearSelectedTicker"
+      @click="$emit('clearSelectedTicker')"
       type="button"
       class="absolute top-0 right-0"
     >
@@ -52,18 +52,22 @@ export default {
   props: {
     graph: {
       type: Array,
-      require: false,
+      require: true,
       default() {
         return [];
       }
     },
     selectedTicker: {
       type: Object,
-      require: false,
+      require: true,
       default() {
         return {};
       }
     }
+  },
+  emits: {
+    clearSelectedTicker: null,
+    calculateMaxGraphElements: Number
   },
   computed: {
     maxValue() {
@@ -84,15 +88,14 @@ export default {
   },
   methods: {
     clearSelectedTicker() {
-      // const clearSelTicker = null;
-      this.$emit('clear-sel-ticker', null);
+      this.$emit('clear-selected-ticker');
     },
     calculateMaxGraphElements() {
       if (!this.$refs.graph) {
         return;
       }
       const maxGraphElements = this.$refs.graph.clientWidth / 38;
-      this.$emit('calc-max-graph-elements', maxGraphElements);
+      this.$emit('calculate-max-graph-elements', maxGraphElements);
     }
   },
   mounted() {
