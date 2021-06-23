@@ -129,8 +129,7 @@ export default {
       selectedTicker: null,
       coinList: {},
       loading: false,
-      page: 1,
-      temp: []
+      page: 1
     };
   },
   created() {
@@ -181,6 +180,7 @@ export default {
   },
   mounted() {
     sharedWorker.worker.port.onmessage = (e) => {
+      // here is a bug, when you update tickers, the graph breaks
       this.tickers = JSON.parse(e.data);
     };
   },
@@ -189,7 +189,6 @@ export default {
   },
   methods: {
     sendTickersToSharedWorker() {
-      // here is a bug, when you update tickers, the graph breaks
       sharedWorker.postMessage(JSON.stringify(this.tickers));
     },
     clearSelectedTicker() {
