@@ -67,7 +67,7 @@ export default {
   },
   emits: {
     clearSelectedTicker: null,
-    calculateMaxGraphElements: Number
+    calculateMaxGraphElements: null
   },
   computed: {
     maxValue() {
@@ -106,5 +106,3 @@ export default {
   }
 };
 </script>
-
-<style scoped></style>

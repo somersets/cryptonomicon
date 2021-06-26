@@ -101,8 +101,8 @@
         v-if="selectedTicker"
         :selected-ticker="selectedTicker"
         :graph="graph"
-        v-on:calculate-max-graph-elements="calculateMaxGraphElements"
-        v-on:clear-selected-ticker="clearSelectedTicker"
+        @calculate-max-graph-elements="calculateMaxGraphElements"
+        @clear-selected-ticker="clearSelectedTicker"
       ></ticker-graphic>
     </div>
   </div>
@@ -113,7 +113,6 @@ import { subscribeToTicker, unsubscribeFromTicker } from './api';
 import AddTicker from './components/AddTicker';
 import TickerGraphic from './components/TickerGraphic';
 import sharedWorker from '@/shared-worker';
-
 export default {
   name: 'App',
   components: {
@@ -179,9 +178,9 @@ export default {
     }
   },
   mounted() {
-    sharedWorker.worker.port.onmessage = (e) => {
+    sharedWorker.worker.port.onmessage = () => {
       // here is a bug, when you update tickers, the graph breaks
-      this.tickers = JSON.parse(e.data);
+      // this.tickers = JSON.parse(e.data);
     };
   },
   beforeUnmount() {
@@ -195,7 +194,7 @@ export default {
       this.selectedTicker = null;
     },
     calculateMaxGraphElements(newMaxGraphElements) {
-      this.maxGraphElements = newMaxGraphElements;
+      this.maxGraphElements = newMaxGraphElements ?? 38;
     },
     formatPrice(price) {
       if (price === '-') {
