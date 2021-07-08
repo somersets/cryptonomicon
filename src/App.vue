@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <div
-      v-if="!loading"
+      v-if="!loaded"
       class="fixed w-100 h-100 bg-purple-800 inset-0 z-50 flex items-center justify-center"
     >
       <svg
@@ -127,7 +127,7 @@ export default {
       maxGraphElements: 1,
       selectedTicker: null,
       coinList: {},
-      loading: false,
+      loaded: false,
       page: 1
     };
   },
@@ -178,9 +178,11 @@ export default {
     }
   },
   mounted() {
-    sharedWorker.worker.port.onmessage = () => {
-      // here is a bug, when you update tickers, the graph breaks
-      // this.tickers = JSON.parse(e.data);
+    sharedWorker.worker.port.onmessage = (e) => {
+      const tickers = JSON.parse(e.data);
+      tickers.forEach((el) => {
+        console.log(el);
+      });
     };
   },
   beforeUnmount() {
@@ -243,7 +245,7 @@ export default {
       );
       const data = await coins.json();
       this.coinList = data.Data;
-      this.loading = true;
+      this.loaded = true;
     }
   },
   watch: {
