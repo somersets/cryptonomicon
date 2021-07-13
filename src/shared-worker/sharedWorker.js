@@ -21,6 +21,7 @@ socket.onmessage = (e) => {
   handlers.forEach((fn) => fn(newPrice));
 };
 
+//sharedWorker connect
 self.onconnect = (e) => {
   const port = e.ports[0];
   browserInstances.push(port);

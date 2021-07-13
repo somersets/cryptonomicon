@@ -1,5 +1,7 @@
 import { socket, tickersHandlers } from './shared-worker/sharedWorker';
 
+// subscribe and unsubscribe on crypto ticker with websocket
+
 function sendToWebSocket(message) {
   const stringifiedMessage = JSON.stringify(message);
   if (socket.readyState === WebSocket.OPEN) {
