@@ -183,10 +183,9 @@ export default {
   mounted() {
     sharedWorker.worker.port.onmessage = (e) => {
       const tickers = JSON.parse(e.data);
-      console.log(tickers);
-      tickers.forEach((sharedTicker) => {
-        this.tickers.forEach((ticker) => {
-          if (sharedTicker === ticker) {
+      this.tickers.forEach((ticker) => {
+        tickers.forEach((sharedTicker) => {
+          if (sharedTicker.name === ticker.name) {
             ticker.price = sharedTicker.price;
           }
         });
